@@ -19,7 +19,6 @@ in pkgs.mkShell rec {
             ignoreCollisions = true;
             extraLibs = with pkgs.python3.pkgs; [
                 pprintpp
-                python-dotenv
                 requests
                 fastapi
                 uvicorn
