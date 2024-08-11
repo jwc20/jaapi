@@ -1,6 +1,5 @@
 import os
 import sys
-import uvicorn
 
 from fastapi import FastAPI, Request
 
@@ -8,6 +7,12 @@ from fastapi import FastAPI, Request
 # import asyncio
 
 from pydantic import BaseModel
+from typing import List
+from pprintpp import pprint
+
+from datetime import datetime
+now = datetime.now()
+date_time_format = now.strftime("%Y%m%d_%H%M%S")
 
 app = FastAPI()
 
@@ -30,27 +35,28 @@ app = FastAPI()
 #     allow_origins=allowed_origins,
 # )
 
-
-class CdioJson(BaseModel):
-    version: str
-    title: str
-    message: str
-    type: str
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.post("/cdio")
+# request from ChangeDetection.io
+# class CdioRequest(BaseModel):
+#     version: str
+#     name: str
+#     url: str
+#     source: str
+#     created_at: str = date_time_format
+    
+   
+# trigger scraper when post request is received from cdio 
+@app.post("/trigger")
 async def post_cdio_json(request: Request):
+    pprint(request)
     return await request.json()
 
 
 
-if __name__ == "__main__":
-    # uvicorn.run("tts_server:app", host="127.0.0.1", port=8000, log_level="info")
 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info")
     port = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="127.0.0.1", port=port)
+
+
+    # uvicorn.run(app, host="127.0.0.1", port=8000)
