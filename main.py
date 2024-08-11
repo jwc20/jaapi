@@ -3,9 +3,11 @@ from pprintpp import pprint
 
 import os
 from datetime import datetime
+import jsonify
 
-import LinkedInScraper
-import WAASU # TODO
+from li_scraper import LinkedInScraper
+
+# import WAASU # TODO
 
 now = datetime.now()
 date_time_format = now.strftime("%Y%m%d_%H%M%S")
@@ -15,7 +17,9 @@ output_filename = f"li_data_{date_time_format}.csv"
 cwd = os.getcwd()
 home_directory = "/home/cjw"
 current_save_directory = "scraped_data"
-current_save_directory = os.path.join(current_save_directory, "linkedin") # TODO: save for other job boards
+current_save_directory = os.path.join(
+    current_save_directory, "linkedin"
+)  # TODO: save for other job boards
 save_filename = ""
 
 if cwd != home_directory:
@@ -33,15 +37,29 @@ else:
 app = FastAPI()
 
 
+@app.get("/")
+def index():
+    return jsonify(
+        {
+            "author": "cjw",
+            "project": {
+                "name": "Job Aggregate API",
+                "url": "https://github.com/jwc20/jaapi",
+            },
+            "endpoints": {"trigger": "/trigger"},
+        }
+    )
+
+
 @app.post("/trigger")
 async def post_cdio_json(request: Request):
     """
     trigger scraper when post request is received from cdio
     """
     pprint(request)
-    
+
     req = await request.json()
-    
+
     if "linkedin" in req.url:
         keyword = "software%20engineer"
         num_pages = 5
@@ -50,11 +68,12 @@ async def post_cdio_json(request: Request):
         scraped_jobs.to_csv(save_filename, index=False)
         print("Ending LinkedIn scraper")
 
-        
-    
     # return await request.json()
 
 
 if __name__ == "__main__":
     import uvicorn
+
+    # TODO: use multiple gunicorn worker processes -> 16 workers since my cx33 server has 8 vCPU
     uvicorn.run("main:app", host="127.0.0.1", port=9009, log_level="info")
+P

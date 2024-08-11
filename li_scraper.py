@@ -66,7 +66,10 @@ ignore_companies = [
     "Jobot Consulting"
 ]
 
-class LinkedInScraper:
+class LinkedInScraper():
+    
+    def __init__(self) -> None:
+        pass
 
     def scrape_linkedin_jobs(keyword, num_pages):
         
