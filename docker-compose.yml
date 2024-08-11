@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    container_name: jaapi-fastapi
+    ports:
+      - "9009:9009"
+    volumes:
+      - ./scraped_data:/app/scraped_data
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
