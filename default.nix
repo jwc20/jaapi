@@ -22,6 +22,9 @@ in pkgs.mkShell rec {
                 requests
                 fastapi
                 uvicorn
+                beautifulsoup4
+                pandas
+                selenium
             ];
         })
     ]);
