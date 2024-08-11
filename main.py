@@ -3,10 +3,8 @@ from pprintpp import pprint
 
 import os
 from datetime import datetime
-import jsonify
 
 from li_scraper import LinkedInScraper
-
 # import WAASU # TODO
 
 now = datetime.now()
@@ -39,16 +37,14 @@ app = FastAPI()
 
 @app.get("/")
 def index():
-    return jsonify(
-        {
-            "author": "cjw",
-            "project": {
-                "name": "Job Aggregate API",
-                "url": "https://github.com/jwc20/jaapi",
-            },
-            "endpoints": {"trigger": "/trigger"},
-        }
-    )
+    return {
+        "author": "cjw",
+        "project": {
+            "name": "Job Aggregate API",
+            "url": "https://github.com/jwc20/jaapi",
+        },
+        "endpoints": {"trigger": "/trigger"},
+    }
 
 
 @app.post("/trigger")
@@ -76,4 +72,3 @@ if __name__ == "__main__":
 
     # TODO: use multiple gunicorn worker processes -> 16 workers since my cx33 server has 8 vCPU
     uvicorn.run("main:app", host="127.0.0.1", port=9009, log_level="info")
-P
