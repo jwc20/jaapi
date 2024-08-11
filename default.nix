@@ -14,23 +14,15 @@ in pkgs.mkShell rec {
     buildInputs = (with pkgs; [
         bashInteractive
         curl
-        git
-        gnugrep
-        lazygit
-        nix-prefetch-scripts
         neovim # => get settings from ~/.config/nvim/init.vim
-        tmux
-        tree
-        which
         (pkgs.python3.buildEnv.override {
             ignoreCollisions = true;
             extraLibs = with pkgs.python3.pkgs; [
-                beautifulsoup4
-                lxml
                 pprintpp
                 python-dotenv
                 requests
-                selenium
+                fastapi
+                uvicorn
             ];
         })
     ]);
