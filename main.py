@@ -1,36 +1,33 @@
-from fastapi import FastAPI, Request
-from pprintpp import pprint
+
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
+
+
 
 import os
 from datetime import datetime
+from pprintpp import pprint
+import json
 
 from li_scraper import LinkedInScraper
 # import WAASU # TODO
+
 
 now = datetime.now()
 date_time_format = now.strftime("%Y%m%d_%H%M%S")
 output_filename = f"li_data_{date_time_format}.csv"
 
-
-cwd = os.getcwd()
-home_directory = "/home/cjw"
-current_save_directory = "scraped_data"
-current_save_directory = os.path.join(
-    current_save_directory, "linkedin"
-)  # TODO: save for other job boards
+current_save_directory = "/app/scraped_data/linkedin"
+# current_save_directory = "./scraped_data/linkedin"
 save_filename = ""
 
-if cwd != home_directory:
-    cwd = home_directory
-    os.chdir(cwd)
+# if not os.path.exists(current_save_directory):
+#     os.makedirs(current_save_directory)
 
-# TODO: save for other job boards
-if os.path.exists(current_save_directory):
-    save_filename = f"~/{current_save_directory}/{output_filename}"
-else:
-    os.makedirs(current_save_directory)
-    save_filename = f"~/{current_save_directory}/{output_filename}"
-
+save_filename = os.path.join(current_save_directory, output_filename)  
+print(save_filename)
 
 app = FastAPI()
 
@@ -47,24 +44,43 @@ def index():
     }
 
 
+
 @app.post("/trigger")
 async def post_cdio_json(request: Request):
     """
-    trigger scraper when post request is received from cdio
+    trigger scraper when a POST request is received from cdio
     """
-    pprint(request)
+    try:
+        req = await request.json()
+        if "message" not in req:
+            raise HTTPException(status_code=400, detail="Missing 'message' in the request body")
 
-    req = await request.json()
+        message = req["message"]
+        
+        if isinstance(message, str):
+            # message = message.replace("\n", "")
+            message = json.loads(message)
+        
+        # pprint(req)
+        print("###############################")
+        pprint(message)
+        print("###############################")
 
-    if "linkedin" in req.url:
-        keyword = "software%20engineer"
-        num_pages = 5
-        print("Starting LinkedIn scraper.")
-        scraped_jobs = LinkedInScraper.scrape_linkedin_jobs(keyword, num_pages)
-        scraped_jobs.to_csv(save_filename, index=False)
-        print("Ending LinkedIn scraper")
+        if "watch_url" in message and "linkedin" in message["watch_url"]:
+            keyword = "software%20engineer"
+            num_pages = 5
+            print("Starting LinkedIn scraper.")
+            scraped_jobs = LinkedInScraper.scrape_linkedin_jobs(keyword, num_pages)
+            scraped_jobs.to_csv(save_filename, index=False)
+            print("Ending LinkedIn scraper")
 
-    # return await request.json()
+        response_data = {"status": "success", "data": message}
+        return JSONResponse(content=jsonable_encoder(response_data))
+    
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=f"Missing key in the request body: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 
 if __name__ == "__main__":
