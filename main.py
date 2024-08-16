@@ -58,15 +58,14 @@ async def post_cdio_json(request: Request):
         message = req["message"]
         
         if isinstance(message, str):
-            # message = message.replace("\n", "")
             message = json.loads(message)
         
-        # pprint(req)
-        print("###############################")
-        pprint(message)
-        print("###############################")
+
 
         if "watch_url" in message and "linkedin" in message["watch_url"]:
+            
+            
+            
             keyword = "software%20engineer"
             num_pages = 5
             print("Starting LinkedIn scraper.")

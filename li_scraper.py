@@ -1,19 +1,30 @@
-#! /usr/bin/python3.10
+import requests
+splash_url = "http://localhost:8050/render.png"
+keyword = "software%20engineer"
+extra_param = "f_E=1%2C2%2C3&f_TPR=r2592000&f_WT=2&f_TPR=r86400"
+target_url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&{extra_param}"
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 
 import time
 import pandas as pd
 from datetime import datetime
 from time import sleep
+import os
+
+# https://www.linkedin.com/jobs/search/?keywords=software%20engineer&f_E=1%2C2%2C3&f_TPR=r2592000&f_WT=2&f_TPR=r86400
+
+params = {
+    #url we'd like to go to
+    "url": target_url,
+    #wait 2 seconds for JS rendering
+    "wait": 5,
+    }
+#send the request to Splash server
+response = requests.get(splash_url, params=params)
+#write the response to a file
+with open("splash-li.png", "wb") as file:
+    file.write(response.content)
+
 import os
 
 
