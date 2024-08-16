@@ -12,9 +12,7 @@ from li_scraper import LinkedInScraper
 # import WAASU # TODO
 
 
-now = datetime.now()
-date_time_format = now.strftime("%Y%m%d_%H%M%S")
-output_filename = f"li_data_{date_time_format}.csv"
+
 
 app = FastAPI()
 
@@ -50,7 +48,11 @@ async def post_cdio_json(request: Request):
 
         if "watch_url" in message and "linkedin" in message["watch_url"]:
             keyword = "software%20engineer"
-            num_pages = 2
+            nqum_pages = 5
+            
+            now = datetime.now()
+            date_time_format = now.strftime("%Y%m%d_%H%M%S")
+            output_filename = f"li_data_{date_time_format}.csv"
             print("Starting LinkedIn scraper.")
             print(f"Filename: {output_filename}")
             
