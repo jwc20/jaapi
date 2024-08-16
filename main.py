@@ -3,9 +3,6 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-
-
-
 import os
 from datetime import datetime
 from pprintpp import pprint
@@ -18,16 +15,6 @@ from li_scraper import LinkedInScraper
 now = datetime.now()
 date_time_format = now.strftime("%Y%m%d_%H%M%S")
 output_filename = f"li_data_{date_time_format}.csv"
-
-current_save_directory = "/app/scraped_data/linkedin"
-# current_save_directory = "./scraped_data/linkedin"
-save_filename = ""
-
-# if not os.path.exists(current_save_directory):
-#     os.makedirs(current_save_directory)
-
-save_filename = os.path.join(current_save_directory, output_filename)  
-print(save_filename)
 
 app = FastAPI()
 
@@ -56,21 +43,21 @@ async def post_cdio_json(request: Request):
             raise HTTPException(status_code=400, detail="Missing 'message' in the request body")
 
         message = req["message"]
-        
+
         if isinstance(message, str):
             message = json.loads(message)
-        
-
+            pprint(message)
 
         if "watch_url" in message and "linkedin" in message["watch_url"]:
-            
-            
-            
             keyword = "software%20engineer"
-            num_pages = 5
+            num_pages = 2
             print("Starting LinkedIn scraper.")
+            print(f"Filename: {output_filename}")
+            
+            save_filename = f"/app/scraped_data/linkedin/{output_filename}"
             scraped_jobs = LinkedInScraper.scrape_linkedin_jobs(keyword, num_pages)
             scraped_jobs.to_csv(save_filename, index=False)
+            
             print("Ending LinkedIn scraper")
 
         response_data = {"status": "success", "data": message}
