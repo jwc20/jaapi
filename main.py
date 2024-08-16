@@ -48,7 +48,7 @@ async def post_cdio_json(request: Request):
 
         if "watch_url" in message and "linkedin" in message["watch_url"]:
             keyword = "software%20engineer"
-            nqum_pages = 5
+            num_pages = 5
             
             now = datetime.now()
             date_time_format = now.strftime("%Y%m%d_%H%M%S")
