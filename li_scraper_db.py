@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import requests
 import time
 from datetime import datetime
@@ -5,27 +7,17 @@ import pandas as pd
 import os
 import json
 from bs4 import BeautifulSoup
+from sqlalchemy import create_engine
+import psycopg2
+import dotenv
 
-
-# splash_url = "http://localhost:8050/render.html"
+dotenv.load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 splash_url = "http://test.wonjchoi.com:8050/render.html"
-
-
-# for entry-level:  "f_E=2"
-# for remote: "f_WT=2"
-# &f_E=1%2C2%2C3&f_WT=2&
-# posted within 24 hours: f_TPR=r86400
-
-# keyword = "software%20engineer"
 extra_param = "f_E=1%2C2%2C3&f_TPR=r2592000&f_WT=2&f_TPR=r86400"
-# target_url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&{extra_param}"
 
 now = datetime.now()
-# date_time_format = now.strftime("%Y%m%d_%H%M%S")
-# output_filename = f"li_data_{date_time_format}.csv"
-
-# save_file = f"./scraped_data/linkedin/{output_filename}"
 
 ignore_companies = [
     "minware",
@@ -48,10 +40,11 @@ ignore_companies = [
     "Crossover",
     "Esyconnect",
     "RemoteWorker UK",
-    "Jobot Consulting"
+    "Jobot Consulting",
 ]
 
-class LinkedInScraper():
+
+class LinkedInScraperDB:
 
     def __init__(self):
         pass
@@ -65,7 +58,9 @@ class LinkedInScraper():
                 # "extracted_skills",
                 "job_link",
                 # "job_description",
-                "date_scraped"
+                # "date_scraped"
+                "created_at",
+                "updated_at",
             ]
         )
 
@@ -85,20 +80,23 @@ class LinkedInScraper():
             end
             """
 
-            response = requests.post(splash_url, json={
-                'lua_source': lua_script,
-                'url': url,
-                'wait': 5,
-            })
+            response = requests.post(
+                splash_url,
+                json={
+                    "lua_source": lua_script,
+                    "url": url,
+                    "wait": 5,
+                },
+            )
 
-            soup = BeautifulSoup(response.text, 'html.parser')
-            job_cards = soup.select('.base-card')
+            soup = BeautifulSoup(response.text, "html.parser")
+            job_cards = soup.select(".base-card")
 
             for card in job_cards:
                 try:
-                    job_title_element = card.select_one('.base-search-card__title')
-                    company_element = card.select_one('.base-search-card__subtitle')
-                    description_element = card.select_one('.base-card__full-link')
+                    job_title_element = card.select_one(".base-search-card__title")
+                    company_element = card.select_one(".base-search-card__subtitle")
+                    description_element = card.select_one(".base-card__full-link")
 
                     company_name = company_element.text.strip()
 
@@ -106,7 +104,7 @@ class LinkedInScraper():
                         continue
 
                     job_title = job_title_element.text.strip()
-                    job_link = description_element['href']
+                    job_link = description_element["href"]
 
                     # job_description = LinkedInScraper.extract_job_description(job_link)
                     # extracted_skills = LinkedInScraper.extract_skills(job_description)
@@ -120,7 +118,9 @@ class LinkedInScraper():
                             "job_link": job_link,
                             # "job_description": job_description,
                             # "extracted_skills": extracted_skills,
-                            "date_scraped": now,
+                            # "date_scraped": now,
+                            "created_at": now,
+                            "updated_at": now,
                         },
                         ignore_index=True,
                     )
@@ -146,14 +146,17 @@ class LinkedInScraper():
         end
         """
 
-        response = requests.post(splash_url, json={
-            'lua_source': lua_script,
-            'url': job_link,
-            'wait': 5,
-        })
+        response = requests.post(
+            splash_url,
+            json={
+                "lua_source": lua_script,
+                "url": job_link,
+                "wait": 5,
+            },
+        )
 
         job_description = response.text.strip()
-        job_description = ' '.join(job_description.split())
+        job_description = " ".join(job_description.split())
         return job_description
 
     @staticmethod
@@ -168,17 +171,39 @@ class LinkedInScraper():
             "Flask",
             "Django",
             "Nix",
-            "React"
+            "React",
         ]
         description = description.lower()
         skills_list = [skill for skill in skills if skill.lower() in description]
         return skills_list
 
-# Main function
-# if __name__ == "__main__":
-#     keyword = "software%20engineer"
-#     num_pages = 2
-#     print("Starting LinkedIn scraper.")
-#     scraped_jobs = LinkedInScraper.scrape_linkedin_jobs(keyword, num_pages)
-#     scraped_jobs.to_csv(save_file, index=False)
-#     print("Ending LinkedIn scraper")
+if __name__ == "__main__":
+    keyword = "software%20engineer"
+    num_pages = 5
+
+    now = datetime.now()
+    date_time_format = now.strftime("%Y%m%d_%H%M%S")
+    output_filename = f"li_data_{date_time_format}.csv"
+    # print("Starting LinkedIn scraper.")
+    # print(f"Filename: {output_filename}")
+
+    # save_filename = f"./scraped_data/linkedin/{output_filename}"
+    scraped_jobs = LinkedInScraperDB.scrape_linkedin_jobs(keyword, num_pages)
+    # print(scraped_jobs)
+    # scraped_jobs.to_csv(save_filename, index=False)
+
+    try:
+        conn_string = DATABASE_URL
+
+        db = create_engine(conn_string)
+        conn = db.connect()
+        print("connected to postgres")
+        # df = pd.DataFrame(data)
+        scraped_jobs.to_sql(
+            "scraped_li_job_listings", con=conn, if_exists="replace", index=False
+        )
+        print("saved to postgres")
+    except:
+        print("I am unable to connect to the database")
+
+    print("Ending LinkedIn scraper")
