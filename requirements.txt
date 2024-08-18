@@ -4,7 +4,5 @@ pprintpp
 requests
 beautifulsoup4
 pandas
-selenium
-webdriver_manager
-
-undetected-chromedriver
+gevent
+psycopg2
