@@ -74,7 +74,7 @@ async def post_cdio_json(request: Request):
                 # df = pd.DataFrame(data)
                 print(f"Total {scraped_jobs.count} received.")
                 scraped_jobs.results.to_sql(
-                    "scraped_li_job_listings", con=conn, if_exists="append", index=False
+                    "scraped_li_job_listings", con=conn, if_exists="replace", index=False
                 )
                 print("saved to postgres")
             except Exception as e:
