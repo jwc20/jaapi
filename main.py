@@ -5,25 +5,23 @@ from fastapi.encoders import jsonable_encoder
 
 import os
 from datetime import datetime
+import time
 from pprintpp import pprint
 import json
 
-from li_scraper import LinkedInScraper
+# from li_scraper import LinkedInScraper
 from li_scraper_db import LinkedInScraperDB
 # import WAASU # TODO
 
-
 from sqlalchemy import create_engine
-import psycopg2
 import dotenv
+
+from collections import namedtuple
 
 dotenv.load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-
-
 app = FastAPI()
-
 
 @app.get("/")
 def index():
@@ -54,21 +52,18 @@ async def post_cdio_json(request: Request):
             message = json.loads(message)
             pprint(message)
 
+        # LinkedIn
         if "watch_url" in message and "linkedin" in message["watch_url"]:
-            keyword = "software%20engineer"
             num_pages = 5
-
+            global_start_time = time.time()
             now = datetime.now()
             date_time_format = now.strftime("%Y%m%d_%H%M%S")
-            # output_filename = f"li_data_{date_time_format}.csv"
-            # print("Starting LinkedIn scraper.")
-            # print(f"Filename: {output_filename}")
-
             print(date_time_format)
-            # save_filename = f"./scraped_data/linkedin/{output_filename}"
-            scraped_jobs = LinkedInScraperDB.scrape_linkedin_jobs(keyword, num_pages)
-            # print(scraped_jobs)
-            # scraped_jobs.to_csv(save_filename, index=False)
+
+            # print(f"Scraping from {message["watch_url"]}")
+
+            # Call li_scraper_db.py
+            scraped_jobs = LinkedInScraperDB.scrape_linkedin_jobs(message["watch_url"], num_pages)
 
             try:
                 conn_string = DATABASE_URL
@@ -77,29 +72,18 @@ async def post_cdio_json(request: Request):
                 conn = db.connect()
                 print("connected to postgres")
                 # df = pd.DataFrame(data)
-                scraped_jobs.to_sql(
-                    "scraped_li_job_listings", con=conn, if_exists="replace", index=False
+                print(f"Total {scraped_jobs.count} received.")
+                scraped_jobs.results.to_sql(
+                    "scraped_li_job_listings", con=conn, if_exists="append", index=False
                 )
                 print("saved to postgres")
-            except:
-                print("I am unable to connect to the database")
-
+            except Exception as e:
+                print(e)
+            
+            global_end_time = time.time()
+            global_elapsed_time = global_end_time - global_start_time
+            print(f"Total time taken: {global_elapsed_time:.4f} seconds")
             print("Ending LinkedIn scraper")
-
-            # keyword = "software%20engineer"
-            # num_pages = 5
-
-            # now = datetime.now()
-            # date_time_format = now.strftime("%Y%m%d_%H%M%S")
-            # # output_filename = f"li_data_{date_time_format}.csv"
-            # print(date_time_format)
-            # print("Starting LinkedIn scraper.")
-            # # print(f"Filename: {output_filename}")
-            # # save_filename = f"/app/scraped_data/linkedin/{output_filename}"
-            # scraped_jobs = LinkedInScraperDB.scrape_linkedin_jobs(keyword, num_pages)
-            # # scraped_jobs.to_csv(save_filename, index=False)
-
-            # print("Ending LinkedIn scraper")
 
         response_data = {"status": "success", "data": message}
         return JSONResponse(content=jsonable_encoder(response_data))
