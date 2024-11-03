@@ -13,7 +13,7 @@ from collections import namedtuple
 dotenv.load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-splash_url = "http://test.wonjchoi.com:8050/render.html"
+splash_url = "http://jaapi.tearsjobs.careers:8050/render.html"
 
 now = datetime.now()
 
